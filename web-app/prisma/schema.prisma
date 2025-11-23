@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  designation String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  embeddings     FaceEmbedding[]
+  attendanceLogs AttendanceLog[]
+}
+
+model FaceEmbedding {
+  id         String   @id @default(uuid())
+  employeeId String
+  embedding  Float[]  // Stored as array of floats
+  imageUrl   String?  // Path to the face image file
+  createdAt  DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model AttendanceLog {
+  id              String   @id @default(uuid())
+  employeeId      String
+  checkInTime     DateTime @default(now())
+  confidenceScore Float
+  snapshotUrl     String?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model UnassignedFace {
+  id        String   @id @default(uuid())
+  embedding Float[]
+  imageUrl  String?
+  pHash     String?  // Perceptual hash for image deduplication
+  createdAt DateTime @default(now())
+}
